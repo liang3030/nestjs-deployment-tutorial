@@ -29,6 +29,8 @@ It will use ec2 with docker to deploy service. It will use RDS to set up a postg
 
 4. Setup db connection
 
+   - Follow the instrunction in reference 5. Run `sudo dnf update -y` update EC2 instance. Then run `sudo dnf install postgresql15` to install psql command-line client.
+
    - Make sure it is possible to connect database from ec2 instance to RDS. It could be done by follow the document provide by aws. See in reference 5. `psql --host=endpoint --port=5432 --dbname=postgres --username=postgres`, mostly only need to change `endpoint`.
 
    - It needs to setup an `parameter groups` of database first, and change `rds.forcerds.force_ssl` from 1 to 0. See in reference 4.
@@ -37,7 +39,14 @@ It will use ec2 with docker to deploy service. It will use RDS to set up a postg
 
 ##### Stage 3: Use terraform IAC to create `hardware` for server.
 
-1. Understanding network security and configuration in aws
+The detail configuration is in terraform folder.
+
+TODO: complete terraform setting: create a security group
+
+1. setup variable for terraform
+   - set up `variable` in main terraform file
+   - create another file called `dev.tfvars`, and set up environment variables.
+   - run `terraform apply -var-file=dev.tfvars` to apply variables to terraform file.
 
 ##### Stage 4: Integration deployment with github actions.
 
