@@ -1,6 +1,6 @@
 ### Introduction
 
-It is used to familiar how to deploy an service on AWS. It has two parts, first one is `service`, it contains all business logic. Second one is `db`, it is postgreSQL database. (废话 haha)
+It is used to familiar how to deploy an service on AWS. This nestjs project itself t has two parts, first one is `service`, it contains all business logic. Second one is `db`, it is postgreSQL database. (废话 haha)
 
 #### Stages
 
@@ -41,14 +41,51 @@ It will use ec2 with docker to deploy service. It will use RDS to set up a postg
 
 The detail configuration is in terraform folder.
 
-TODO: complete terraform setting: create a security group
-
 1. setup variable for terraform
    - set up `variable` in main terraform file
    - create another file called `dev.tfvars`, and set up environment variables.
    - run `terraform apply -var-file=dev.tfvars` to apply variables to terraform file.
+2. TODO::Terraform setup
+
+   - VPC: setup VPC, service instance should be access by internet, RDS should be access by service, but not internet.
+   - security group: seurity group attach tom EC2, RDS instance. It is not belong to VPC I think now.
+   - EC2: setup service instance
+   - RDS: setup postgres database
+   - ECR: setup a registry to update service image
 
 ##### Stage 4: Integration deployment with github actions.
+
+1. create a AWS ECR(Elastic Container Registry)
+   - Set registry private
+2. create a github action file for build image, `.github/workflows/build.yml`
+   - create a user with required permission for uploading docker image through AWS IAM service. I used an existed user called `executer`. It needs to add inline permission policy. Select User and `Permissions` tab of this User, open dropdown and select `create inline policy`. Then choose `JSON` for editing. Copy and paste following json content to the file.
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": [
+           "ecr:GetAuthorizationToken",
+           "ecr:InitiateLayerUpload",
+           "ecr:UploadLayerPart",
+           "ecr:CompleteLayerUpload",
+           "ecr:BatchCheckLayerAvailability",
+           "ecr:PutImage",
+           "ecr:TagResource"
+         ],
+         "Resource": "arn:aws:ecr:region:account-id:repository/repository-name"
+       }
+     ]
+   }
+   ```
+   - ecr:GetAuthorizationToken: authenticate docker clients to Amazon ECR registries.
+   - ecr:InitiateLayerUpload:allows the user to initiate the upload of image layers to the specified ECR repository.
+   - ecr:UploadLayerPart: allows the user to upload image layer parts to the specified ecr repository.
+   - ecr:CompleteLayerUpload:allows the user to complete the upload of image layers to then sepcified ECR repository.
+   - ecr:BatchCheckLayerAvailability (Optional):allows the user to check the availability of image layers in the specified ECR repository before pushing.
+   - ecr:PutImage: allows the user to create or update image manifests in the specified ECR repository.
+   - ecr:TagResource (Optional): allows the user to add tags to the ECR repository or images.
 
 #### Reference
 
